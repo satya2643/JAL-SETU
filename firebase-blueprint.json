@@ -1,0 +1,355 @@
+{
+  "entities": {
+    "Resident": {
+      "title": "Resident",
+      "description": "Registered citizen profile with assigned municipal ward in Visakhapatnam",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Resident email address"
+        },
+        "name": {
+          "type": "string",
+          "description": "Resident citizen full name",
+          "maxLength": 100
+        },
+        "wardId": {
+          "type": "number",
+          "description": "GVMC ward division number between 1 and 98"
+        },
+        "locality": {
+          "type": "string",
+          "description": "Colony, street or apartment address",
+          "maxLength": 200
+        },
+        "role": {
+          "type": "string",
+          "description": "Resident access tier",
+          "enum": ["resident"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Account creation timestamp"
+        }
+      },
+      "required": ["email", "name", "wardId"]
+    },
+    "AppNotification": {
+      "title": "AppNotification",
+      "description": "Live municipal civic alert or valve release broadcast message",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Notification heading in English",
+          "maxLength": 200
+        },
+        "teluguTitle": {
+          "type": "string",
+          "description": "Notification heading in Telugu",
+          "maxLength": 200
+        },
+        "message": {
+          "type": "string",
+          "description": "Notification body in English",
+          "maxLength": 1000
+        },
+        "teluguMessage": {
+          "type": "string",
+          "description": "Notification body in Telugu",
+          "maxLength": 1000
+        },
+        "type": {
+          "type": "string",
+          "description": "Alert category",
+          "enum": ["maintenance", "schedule", "emergency", "info", "tanker"]
+        },
+        "priority": {
+          "type": "string",
+          "description": "Alert priority",
+          "enum": ["normal", "high", "urgent"]
+        },
+        "target": {
+          "type": "string",
+          "description": "Target audience scope",
+          "enum": ["all", "ward", "zone"]
+        },
+        "targetId": {
+          "type": "string",
+          "description": "Specific target ward number or zone name"
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Whether the notification is actively shown"
+        },
+        "source": {
+          "type": "string",
+          "description": "Source origin of alert (e.g. SCADA, Developer Portal, Field Operator)"
+        },
+        "actionLabel": {
+          "type": "string",
+          "description": "CTA button label text"
+        },
+        "actionType": {
+          "type": "string",
+          "description": "Action type"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": ["title", "message", "type", "priority", "target", "isActive"]
+    },
+    "WardTelemetry": {
+      "title": "WardTelemetry",
+      "description": "Real-time municipal valve and SCADA pressure readings for a ward",
+      "type": "object",
+      "properties": {
+        "wardId": {
+          "type": "number",
+          "description": "Ward division number"
+        },
+        "name": {
+          "type": "string",
+          "description": "Ward and locality name"
+        },
+        "zone": {
+          "type": "string",
+          "description": "GVMC Zone 1 to 8"
+        },
+        "timing": {
+          "type": "string",
+          "description": "Daily scheduled supply window"
+        },
+        "feeder": {
+          "type": "string",
+          "description": "Feeder reservoir or pipeline source"
+        },
+        "status": {
+          "type": "string",
+          "description": "Current valve and supply status",
+          "enum": ["Supplying Now", "Scheduled", "Low Pressure Alert", "Maintenance"]
+        },
+        "linePressure": {
+          "type": "string",
+          "description": "Descriptive line pressure"
+        },
+        "pressureBar": {
+          "type": "number",
+          "description": "Barometric pressure in Bar"
+        },
+        "pressurePercent": {
+          "type": "number",
+          "description": "Pressure percentage index"
+        },
+        "nextSupplyCountdown": {
+          "type": "string",
+          "description": "Time remaining until next supply cycle"
+        },
+        "notice": {
+          "type": "string",
+          "description": "Field operator notice"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "description": "Last telemetry update timestamp"
+        }
+      },
+      "required": ["wardId", "name", "zone", "status", "linePressure", "pressureBar"]
+    },
+    "TankerBooking": {
+      "title": "TankerBooking",
+      "description": "Emergency doorstep municipal tanker dispatch request",
+      "type": "object",
+      "properties": {
+        "residentName": {
+          "type": "string",
+          "description": "Resident contact name"
+        },
+        "residentEmail": {
+          "type": "string",
+          "description": "Resident email address"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone number"
+        },
+        "wardId": {
+          "type": "number",
+          "description": "Target ward"
+        },
+        "locality": {
+          "type": "string",
+          "description": "Delivery address"
+        },
+        "capacityLiters": {
+          "type": "number",
+          "description": "Tanker size in liters"
+        },
+        "urgency": {
+          "type": "string",
+          "description": "Urgency category"
+        },
+        "status": {
+          "type": "string",
+          "description": "Dispatch status",
+          "enum": ["pending", "dispatched", "delivered", "cancelled"]
+        },
+        "bookingTime": {
+          "type": "string",
+          "description": "Booking submission time"
+        },
+        "deliverySlot": {
+          "type": "string",
+          "description": "Target delivery slot"
+        }
+      },
+      "required": ["residentName", "wardId", "locality", "capacityLiters", "status"]
+    },
+    "AlertSubscriber": {
+      "title": "AlertSubscriber",
+      "description": "Citizen mobile subscriber registered for municipal water valve SMS alerts",
+      "type": "object",
+      "properties": {
+        "phone": {
+          "type": "string",
+          "description": "10-digit Indian mobile number"
+        },
+        "name": {
+          "type": "string",
+          "description": "Subscriber name"
+        },
+        "wardId": {
+          "type": "number",
+          "description": "GVMC ward number"
+        },
+        "leadTime": {
+          "type": "string",
+          "description": "Lead time in minutes"
+        },
+        "language": {
+          "type": "string",
+          "description": "Preferred language script"
+        },
+        "subscribedAt": {
+          "type": "string",
+          "description": "Registration timestamp"
+        }
+      },
+      "required": ["phone", "wardId"]
+    },
+    "DispatchLog": {
+      "title": "DispatchLog",
+      "description": "Carrier SMS and WhatsApp alert dispatch audit record",
+      "type": "object",
+      "properties": {
+        "phone": {
+          "type": "string",
+          "description": "Recipient phone number"
+        },
+        "wardId": {
+          "type": "number",
+          "description": "Affected ward"
+        },
+        "message": {
+          "type": "string",
+          "description": "Dispatched text"
+        },
+        "carrier": {
+          "type": "string",
+          "description": "Delivery carrier route"
+        },
+        "status": {
+          "type": "string",
+          "description": "Delivery status"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Dispatch timestamp"
+        }
+      },
+      "required": ["phone", "message", "status"]
+    },
+    "Reservoir": {
+      "title": "Reservoir",
+      "description": "Key Visakhapatnam water reservoir capacity, water level, and inflow/outflow telemetry",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique reservoir identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Reservoir name in English"
+        },
+        "teluguName": {
+          "type": "string",
+          "description": "Reservoir name in Telugu"
+        },
+        "percentage": {
+          "type": "number",
+          "description": "Capacity percentage (0 to 100)"
+        },
+        "level": {
+          "type": "string",
+          "description": "Current water level in feet"
+        },
+        "maxLevel": {
+          "type": "string",
+          "description": "Full reservoir capacity level in feet"
+        },
+        "status": {
+          "type": "string",
+          "description": "Current operational reserve status"
+        },
+        "inflow": {
+          "type": "string",
+          "description": "Inflow in Cusecs"
+        },
+        "outflow": {
+          "type": "string",
+          "description": "Outflow in Cusecs"
+        },
+        "accentColor": {
+          "type": "string",
+          "description": "UI theme accent color"
+        }
+      },
+      "required": ["id", "name", "percentage", "level", "status"]
+    }
+  },
+  "firestore": {
+    "/residents/{residentId}": {
+      "schema": { "$ref": "#/entities/Resident" },
+      "description": "Registered citizen profile documents keyed by user UID or email"
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/AppNotification" },
+      "description": "Live municipal civic alerts, scheduled maintenance, and valve broadcasts"
+    },
+    "/ward_telemetry/{wardId}": {
+      "schema": { "$ref": "#/entities/WardTelemetry" },
+      "description": "Real-time gate valve states and line pressures across 98 GVMC wards"
+    },
+    "/tanker_bookings/{bookingId}": {
+      "schema": { "$ref": "#/entities/TankerBooking" },
+      "description": "Civic emergency water tanker bookings dispatched across Visakhapatnam"
+    },
+    "/alert_subscribers/{subscriberId}": {
+      "schema": { "$ref": "#/entities/AlertSubscriber" },
+      "description": "Citizen mobile numbers registered for SMS and WhatsApp water supply alerts"
+    },
+    "/dispatch_logs/{logId}": {
+      "schema": { "$ref": "#/entities/DispatchLog" },
+      "description": "Audit trail of sent mobile alerts, valve releases, and carrier delivery logs"
+    },
+    "/reservoirs/{reservoirId}": {
+      "schema": { "$ref": "#/entities/Reservoir" },
+      "description": "Key Visakhapatnam water supply reservoirs (Meghadrigedda, Thatipudi, Mudasarlova, Raiwada)"
+    }
+  }
+}

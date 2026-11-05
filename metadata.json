@@ -1,0 +1,8 @@
+{
+  "name": "Remix Vizag JalAlert",
+  "description": "Official GVMC Water Board civic portal for real-time ward water release timings, pipeline pressure telemetry, SMS alerts, and emergency tankers in Visakhapatnam.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,131 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened Global Helpers
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-\\.]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+      function isAdmin() {
+        return isSignedIn() && (
+          request.auth.token.email in ['vattamkarthik007@gmail.com', 'admin@gvmc.gov.in', 'operator@gvmc.gov.in', 's234u234@gmail.com'] ||
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        );
+      }
+
+    // 1. Resident Profiles
+    function isValidResident(data) {
+      return data.email is string && data.email.size() > 5 && data.email.size() <= 100 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.wardId is number && data.wardId >= 1 && data.wardId <= 98 &&
+             data.keys().hasAll(['email', 'name', 'wardId']) &&
+             data.keys().hasOnly(['email', 'name', 'wardId', 'locality', 'role', 'createdAt']);
+    }
+
+    match /residents/{residentId} {
+      allow get: if isValidId(residentId) && (isOwner(residentId) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isValidId(residentId) && (isOwner(residentId) || isAdmin()) && isValidResident(incoming());
+      allow update: if isValidId(residentId) && (isOwner(residentId) || isAdmin()) &&
+                    isValidResident(incoming()) &&
+                    incoming().email == existing().email;
+      allow delete: if isAdmin();
+    }
+
+    // 2. Notifications & Civic Broadcasts (Public read, Admin manage)
+    function isValidNotification(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.message is string && data.message.size() > 0 && data.message.size() <= 1000 &&
+             data.type is string && data.type in ['maintenance', 'schedule', 'emergency', 'info', 'tanker'] &&
+             data.priority is string && data.priority in ['normal', 'high', 'urgent'] &&
+             data.target is string && data.target in ['all', 'ward', 'zone'] &&
+             data.isActive is bool &&
+             data.keys().hasAll(['title', 'message', 'type', 'priority', 'target', 'isActive']) &&
+             data.keys().hasOnly(['title', 'teluguTitle', 'message', 'teluguMessage', 'type', 'priority', 'target', 'targetId', 'isActive', 'source', 'actionLabel', 'actionType', 'timestamp', 'date', 'createdAt', 'isRead', 'id']);
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isValidId(notificationId);
+      allow create: if isValidId(notificationId) && isAdmin() && isValidNotification(incoming());
+      allow update: if isValidId(notificationId) && isAdmin() && isValidNotification(incoming());
+      allow delete: if isValidId(notificationId) && isAdmin();
+    }
+
+    // 3. Ward Telemetry & Valve Statuses (Public read, Operator & Admin write)
+    function isValidWardTelemetry(data) {
+      return data.wardId is number && data.wardId >= 1 && data.wardId <= 98 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.zone is string && data.zone.size() > 0 && data.zone.size() <= 50 &&
+             data.status is string && data.status in ['Supplying Now', 'Scheduled', 'Low Pressure Alert', 'Maintenance'] &&
+             data.linePressure is string && data.linePressure.size() <= 50 &&
+             data.pressureBar is number && data.pressureBar >= 0 && data.pressureBar <= 10.0;
+    }
+
+    match /ward_telemetry/{wardId} {
+      allow read: if isValidId(wardId);
+      allow create, update: if isValidId(wardId) && isAdmin() && isValidWardTelemetry(incoming());
+      allow delete: if isAdmin();
+    }
+
+    // 4. Tanker Bookings
+    function isValidTankerBooking(data) {
+      return data.residentName is string && data.residentName.size() > 0 && data.residentName.size() <= 100 &&
+             data.wardId is number && data.wardId >= 1 && data.wardId <= 98 &&
+             data.locality is string && data.locality.size() > 0 && data.locality.size() <= 200 &&
+             data.capacityLiters is number && data.capacityLiters > 0 &&
+             data.status is string && data.status in ['pending', 'dispatched', 'delivered', 'cancelled'];
+    }
+
+    match /tanker_bookings/{bookingId} {
+      allow read: if isValidId(bookingId) && (isAdmin() || (isSignedIn() && resource.data.residentEmail == request.auth.token.email));
+      allow create: if isValidId(bookingId) && isValidTankerBooking(incoming());
+      allow update: if isValidId(bookingId) && isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // 5. Alert Subscribers & Dispatch Logs
+    match /alert_subscribers/{subId} {
+      allow read: if isValidId(subId);
+      allow create, update: if isValidId(subId);
+      allow delete: if isAdmin();
+    }
+
+    match /dispatch_logs/{logId} {
+      allow read, create: if isValidId(logId);
+      allow delete: if isAdmin();
+    }
+
+    // 6. Key Vizag Reservoirs (Public read, Admin update)
+    match /reservoirs/{reservoirId} {
+      allow read: if isValidId(reservoirId);
+      allow create, update, delete: if isValidId(reservoirId) && isAdmin();
+    }
+
+    // 7. Admins list
+    match /admins/{adminId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
